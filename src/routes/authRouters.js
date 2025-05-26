@@ -11,7 +11,7 @@ const generateToken = (userid) => {
 };
 
 // Router to add users
-router.post("/addusers/" ,protectRoute, addUsers);
+router.post("/addusers/" , addUsers);
 
 // Router to login users
 router.post("/login/", loginUser);

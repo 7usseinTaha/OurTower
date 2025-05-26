@@ -7,7 +7,7 @@ import { connectDB } from "./lib/db.js";
 import invoiceRoutes from "./routes/invoiceRoutes.js";
 import vatRoutes from "./routes/vatRoutes.js";
 import protectRoute from "./middleware/auth.middleware.js";
-import {job} from "./lib/cron.js";
+import job from "./lib/cron.js";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
