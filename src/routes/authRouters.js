@@ -11,17 +11,17 @@ const generateToken = (userid) => {
 };
 
 // Router to add users
-router.post("/addusers/" , addUsers);
+router.post("/addusers/" ,protectRoute, addUsers);
 
 // Router to login users
 router.post("/login/", loginUser);
 
 // Router to get All Users
-router.get("/getallusers",  getAllUsers);
+router.get("/getallusers",protectRoute,  getAllUsers);
 
 // Router to update a user
-router.put("/updateuser/:userId",  updateUser);
+router.put("/updateuser/:userId",protectRoute,  updateUser);
 // Router to delete a user
-router.delete("/deleteuser/:userId",  deleteUser);
+router.delete("/deleteuser/:userId",protectRoute,  deleteUser);
 
 export default router;

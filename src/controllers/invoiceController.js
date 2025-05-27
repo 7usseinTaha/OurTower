@@ -13,16 +13,18 @@ export const getInvoices = async (req, res) => {
     const invoices = await Invoice.find()
     .sort({ createdAt: -1 })
     .skip(skip)
-    .limit(limit);
+    .limit(limit)
+    .populate("user", "username profileImg");
 
     const totalInvoices = await Invoice.countDocuments();
 
-    res.status(200).json(
+    res.send(
       invoices,
       {
         page: page,
         limit: limit,
         totalInvoices,
+        totalPage: Math.ceil(totalInvoices / limit),
       }
     );
   } catch (error) {

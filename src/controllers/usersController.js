@@ -32,13 +32,13 @@ const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8
     // Check if user already exists
     const existingUser = await User.findOne({ username });
     if (existingUser) {
-      return res.status(400).json({ message: "اسم المستخدم موجود بالفعل" });
+      return res.status(400).json({ message: " اسم  المستخدم موجود مسبقا" });
     }
 
     // check if email already exists
     const existingEmail = await User.findOne({ email });
     if (existingEmail) {           
-      return res.status(400).json({ message: "البريد الإلكتروني موجود بالفعل" });
+      return res.status(400).json({ message: "البريد الإلكتروني موجود مسبقا" });
     }
 
     //get avatar image from gravatar

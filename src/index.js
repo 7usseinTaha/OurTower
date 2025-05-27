@@ -17,7 +17,7 @@ app.use(cors());
 
 
 app.use("/api/auth", authRoutes);
-app.use("/api/invoices",  invoiceRoutes);
+app.use("/api/invoices",protectRoute,  invoiceRoutes);
 app.use("/api/vat",protectRoute,  vatRoutes);
 
 
