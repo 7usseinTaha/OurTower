@@ -19,6 +19,7 @@ const itemSchema = new mongoose.Schema({
     type: Number,
     required: true
   }
+  
 });
 
 const invoiceSchema = new mongoose.Schema({
@@ -66,7 +67,12 @@ const invoiceSchema = new mongoose.Schema({
   qrCode: {
     type: String,
   default: ""
-  }
+  },
+   user: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User",
+  required: true,
+}
  
 
 }, { timestamps: true });

@@ -1,5 +1,6 @@
 import Invoice from "../models/Invoice.js";
 import QRCode from 'qrcode';
+import protectRoute from "../middleware/auth.middleware.js";
 
 
 // Function to get All Invoices
@@ -18,14 +19,13 @@ export const getInvoices = async (req, res) => {
 
     const totalInvoices = await Invoice.countDocuments();
 
-    res.send(
+    res.send({
       invoices,
-      {
-        page: page,
-        limit: limit,
+        currentpage: page,
         totalInvoices,
         totalPage: Math.ceil(totalInvoices / limit),
-      }
+    }
+      
     );
   } catch (error) {
     console.error("Error fetching invoices:", error);
@@ -91,7 +91,6 @@ let attempts = 0;
       totalAmount,
       vatAmount,
       totalWithVat,
-      qrCode,
 
     } = req.body;
 
@@ -151,8 +150,7 @@ const qrCodeImage = await QRCode.toDataURL(qrData);
       vatAmount,
       totalWithVat,
       qrCode: qrCodeImage, // 👈 هنا نضيف صورة QR
-
-      // user: req.user._id // Assuming req.user is set by the auth middleware
+      user: req.user._id // Assuming req.user is set by the auth middleware
     });
 
     await newInvoice.save();

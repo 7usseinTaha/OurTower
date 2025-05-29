@@ -7,7 +7,7 @@ import User from "../models/User.js";
     try {
         
         // Check if the Authorization header is present
-        const token = req.headers("Authorization").replace("Bearer ", "");
+  const token = req.headers["authorization"]?.replace("Bearer ", "");
     if (!token) {
         return res.status(401).json({ message: " ليس لديك صلاحية : غير مصرح لك بالوصول لهذه الصفحة" });
     }

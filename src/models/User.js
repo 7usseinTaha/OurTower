@@ -8,7 +8,9 @@ const userSchema = new schema({
   email:    { type: String, required: true, unique: true },
   password: { type: String, required: true, minlength: 8 },
   role:     { type: String, required: true },
-  profileImg: { type: String, default: "" }
+  profileImg: { type: String, default: "" },
+
+
 },{ timestamps: true });
 
 userSchema.pre('save', async function (next) {

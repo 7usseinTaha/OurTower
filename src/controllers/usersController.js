@@ -83,6 +83,7 @@ export const loginUser = async (req, res) => {
 
     // Validate input
     if (!email || !password) {
+      console.log("All feilded is reqused")
       return res.status(400).json({ message: "جميع الحقول مطلوبة" });
     }
 
