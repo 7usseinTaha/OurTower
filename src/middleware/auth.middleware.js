@@ -3,14 +3,13 @@ import User from "../models/User.js";
 
  const protectRoute = async (req, res, next) => {
     
-
     try {
-        
-        // Check if the Authorization header is present
-  const token = req.headers["authorization"]?.replace("Bearer ", "");
-    if (!token) {
-        return res.status(401).json({ message: " ليس لديك صلاحية : غير مصرح لك بالوصول لهذه الصفحة" });
-    }
+                // Check if the Authorization header is present
+const token = req.headers.authorization?.replace("Bearer ", "");
+   if (!token) {
+    console.log("No token provided");
+    return res.status(401).json({ message: "ليس لديك صلاحية : غير مصرح لك بالوصول لهذه الصفحة" });
+}
 
     // Verify the token
         const decoded = JWT.verify(token, process.env.JWT_SECRET);
@@ -27,7 +26,7 @@ import User from "../models/User.js";
         next();
     } catch (error) {
         console.error("Error verifying token:", error);
-        return res.status(401).json({ message: "ليس لديك صلاحية : غير مصرح لك بالوصول لهذه الصفحة" });
+        return res.status(401).json({ message: "ليس لديك صلاحية غير مصرح لك   " });
     }
 };
  export default protectRoute;
