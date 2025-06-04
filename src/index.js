@@ -11,15 +11,14 @@ import job from "./lib/cron.js";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
- job.start();
+job.start();
 app.use(express.json());
 app.use(cors());
 
 
 app.use("/api/auth", authRoutes);
-app.use("/api/invoices",protectRoute,  invoiceRoutes);
+app.use("/api/invoices",  invoiceRoutes);
 app.use("/api/vat",protectRoute,  vatRoutes);
-
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

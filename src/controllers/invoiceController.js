@@ -1,7 +1,7 @@
+
 import Invoice from "../models/Invoice.js";
 import QRCode from 'qrcode';
-import protectRoute from "../middleware/auth.middleware.js";
-
+import "dotenv/config";
 
 // Function to get All Invoices
 export const getInvoices = async (req, res) => {  
@@ -53,6 +53,8 @@ export const getInvoiceById = async (req, res) => {
     res.status(500).json({ message: "خطأ في جلب الفاتورة" });
   }
 };
+
+
 
 // Function to get a Invoice between two dates
 export const getInvoicesBetweenDates = async (req, res) => {
@@ -134,7 +136,8 @@ if (!isUnique) {
   return res.status(500).json({ message: "تعذر توليد رقم فاتورة فريد، الرجاء المحاولة لاحقًا." });
 }
 // 1. توليد QR Code
-const qrData = `رقم الفاتورة: ${invoiceNumber}`;
+
+const qrData = `${process.env.API_URL}/api/invoices/ShowInvoice/${invoiceNumber}`;
 const qrCodeImage = await QRCode.toDataURL(qrData); 
   const newInvoice = new Invoice({
     invoiceNumber,
@@ -229,6 +232,8 @@ export const deleteInvoice = async (req, res) => {
     console.error("Error deleting invoice:", error);
     res.status(500).json({ message: "خطأ في حذف الفاتورة" });
    }
-}
+};
+
+
 
 
