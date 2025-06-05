@@ -15,6 +15,7 @@ job.start();
 app.use(express.json());
 app.use(cors());
 
+app.use(express.static('public'));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/invoices",  invoiceRoutes);

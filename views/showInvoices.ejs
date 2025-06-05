@@ -23,11 +23,11 @@
       .invoice-box {
         border-radius: 10px;
         background-color: white;
-        padding: 15px;
+        padding:10px;
 
       }
       .header-logo {
-        width: 100px;
+        width: 120px;
         height: auto;
         border-radius: 16px;
       }
@@ -38,6 +38,10 @@
       .bordered {
         border-bottom: 5px solid #688f68;
       }
+      .bordered-dotted {
+        border: 1px dotted #688f68;
+        padding: 5px;
+      }
       .table-bordered td,
       .table-bordered th {
         border: 1px solid #000;
@@ -46,18 +50,19 @@
       .footer {
          border-top: 4px solid #688f68;
         font-size: 12px;
-        margin-top: 40px;
+        margin-top: 20px;
         bottom: 0;
         display: flex;
         justify-content: space-between;
       }
       .qr {
-        width: 150px;
-        height: 150px;
+        width: 200px;
+        height: 200px;
       }
     </style>
   </head>
   <body>
+
     <div class="invoice-box container">
       <!-- Header -->
       <div class="row align-items-center mb-3 bordered p-4">
@@ -68,7 +73,7 @@
         </div>
 
         <div class="col-2 text-center">
-          <img  src="/assets/logo.png" class="header-logo" alt="logo" />
+          <img  src="/images/logo.png" class="header-logo" alt="logo" />
         </div>
 
         <div class="col-5 text-end">
@@ -87,12 +92,12 @@
         <div class="col-5 text-start p-3">
            <div class="row mb-2">
             <div class="col text-start">رقم الفاتورة :</div>
-            <div class="col text-center border">INV-250000   </div>
+            <div class="col text-center bordered-dotted"><%= showInvoices.invoiceNumber %>   </div>
             <div class="col text-end">:Inv Number</div>
           </div>
            <div class="row mb-2">
             <div class="col text-start">التاريخ  :</div>
-            <div class="col text-center border">15/05-2025   </div>
+            <div class="col text-center bordered-dotted"><%= new Date(showInvoices.invoiceDate).toLocaleDateString('ar-EG') %> </div>
             <div class="col text-end">  :Date  </div>
           </div>
         </div>
@@ -101,22 +106,22 @@
         <div class="col-7 text-start border p-3">
           <div class="row mb-2">
             <div class="col-3 text-start">اسم العميل :</div>
-            <div class="col-6 text-center border">مؤسسة سيهات الذهب للمقاولات</div>
+            <div class="col-6 text-center bordered-dotted"><%= showInvoices.customer.name %>   </div>
             <div class="col-3 text-end">  :Client Name </div>
           </div>
            <div class="row mb-2">
             <div class="col-3 text-start">الرقم الضريبي :</div>
-            <div class="col-6 text-center border">301027391600003   </div>
+            <div class="col-6 text-center bordered-dotted"><%= showInvoices.customer.taxNumber %>   </div>
             <div class="col-3 text-end">   :Tax Number </div>
           </div>
           <div class="row mb-2">
             <div class="col-3 text-start">العنوان  :</div>
-            <div class="col-6 text-center border">ينبع   </div>
+            <div class="col-6 text-center bordered-dotted"><%= showInvoices.customer.address %>   </div>
             <div class="col-3 text-end">   :Address  </div>
           </div>
           <div class="row mb-2">
             <div class="col-3 text-start">رقم الهاتف:</div>
-            <div class="col-6 text-center border">55489675   </div>
+            <div class="col-6 text-center bordered-dotted"><%= showInvoices.customer.phone %>   </div>
             <div class="col-3 text-end">   :Phone </div>
           </div>
          
@@ -137,19 +142,22 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>صناعة حدادة وتجارة الجدران والنفق</td>
-            <td>278.26 ر.س</td>
-            <td>213.847</td>
-            <td>59,505.28 ر.س</td>
+          <% for(let invoices of showInvoices.invoiceDetails) {%>
+              <tr>
+            <td> <%= invoices.description %> </td>
+            <td> <%= invoices.unitPrice %> ر.س</td>
+            <td> <%= invoices.quantity %></td>
+            <td> <%= invoices.totalPrice %> ر.س</td>
           </tr>
+          <% } %>
+          
         </tbody>
       </table>
 
       <!-- Totals + QR -->
       <div class="row mb-5">
         <div class="col-5 text-center">
-          <img src="qr.png" alt="qr" class="qr" />
+          <img src=<%= showInvoices.qrCode %> alt="qr" class="qr" />
         </div>
         <div class="col-7 ">
           <table class="table  text-center">
@@ -157,17 +165,17 @@
               <td  class="text-start">
                 إجمالي المبلغ قبل القيمة المضافة<br />Total amount before VAT
               </td>
-              <td>59,505.28 ر.س</td>
+              <td><%= showInvoices.totalAmount %> ر.س</td>
             </tr>
             <tr>
               <td class="text-start">القيمة المضافة<br />VAT 15%</td>
-              <td>8,925.79 ر.س</td>
+              <td><%= showInvoices.vatAmount %> ر.س</td>
             </tr>
             <tr>
               <td class="text-start">
                 إجمالي المبلغ بعد القيمة المضافة<br />Total amount after VAT
               </td>
-              <td>68,431.07 ر.س</td>
+              <td><%= showInvoices.totalWithVat %> ر.س</td>
             </tr>
           </table>
         </div>
