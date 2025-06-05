@@ -55,7 +55,7 @@ router.get("/ShowInvoice/:id/pdf", async  (req, res) => {
 
     res.set({
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename=invoice-${invoiceId}.pdf`,
+      "Content-Disposition": `attachment; filename=invoice-${id}.pdf`,
     });
 
     res.send(pdfBuffer);
