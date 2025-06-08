@@ -8,6 +8,8 @@ import invoiceRoutes from "./routes/invoiceRoutes.js";
 import vatRoutes from "./routes/vatRoutes.js";
 import protectRoute from "./middleware/auth.middleware.js";
 import job from "./lib/cron.js";
+import puppeteer from "puppeteer";
+
 const app = express();
 const PORT = process.env.PORT || 4000;
 
@@ -21,6 +23,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/invoices",  invoiceRoutes);
 app.use("/api/vat",protectRoute,  vatRoutes);
 
+console.log("Puppeteer Chrome path:", puppeteer.executablePath());
 
 
 app.listen(PORT, () => {
