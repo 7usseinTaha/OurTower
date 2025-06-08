@@ -12,6 +12,7 @@
   "dependencies": {
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
+    "chrome": "^0.1.0",
     "cloudinary": "^2.6.1",
     "cors": "^2.8.5",
     "cron": "^4.3.0",
@@ -19,6 +20,7 @@
     "ejs": "^3.1.10",
     "experss": "^0.0.1-security",
     "express": "^5.1.0",
+    "install": "^0.13.0",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.16.0",
     "mongoose": "^8.15.0",

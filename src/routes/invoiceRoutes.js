@@ -27,7 +27,7 @@ router.put("/:id",protectRoute, updateInvoice);
 
 router.delete("/:id",protectRoute, deleteInvoice);
 
-router.get("/ShowInvoice/:id/pdf", async  (req, res) => {
+router.get("/ShowInvoice/:id", async  (req, res) => {
   try {
       const { id } = req.params;
   
@@ -39,26 +39,12 @@ router.get("/ShowInvoice/:id/pdf", async  (req, res) => {
       }
     
       const html = await new Promise((resolve, reject) => {
-      app.render("showInvoices.ejs", { showInvoices :invoice }, (err, html) => {
+      res.render("showInvoices.ejs", { showInvoices :invoice }, (err, html) => {
         if (err) reject(err);
         else resolve(html);
       });
     });
 
-    const browser = await puppeteer.launch({ headless: "new" });
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
-
-    const pdfBuffer = await page.pdf({ format: "A4" });
-
-    await browser.close();
-
-    res.set({
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename=invoice-${id}.pdf`,
-    });
-
-    res.send(pdfBuffer);
   } catch (err) {
       console.error("Error fetching invoice:", err);
     res.status(500).send("خطأ في إنشاء الفاتورة PDF");
@@ -66,6 +52,46 @@ router.get("/ShowInvoice/:id/pdf", async  (req, res) => {
       
 
    
+});
+
+router.get("/ShowInvoice/:id/pdf", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // جلب الفاتورة بناءً على رقم الفاتورة
+    const invoice = await Invoice.findOne({ invoiceNumber: id });
+
+    if (!invoice) {
+      return res.status(404).json({ message: "الفاتورة غير موجودة" });
+    }
+
+    // استخدام res.render بدلاً من router.render
+    req.app.render("showInvoices.ejs", { showInvoices: invoice }, async (err, html) => {
+      if (err) {
+        console.error("Error rendering EJS:", err);
+        return res.status(500).send("خطأ في عرض القالب");
+      }
+
+
+      const browser = await puppeteer.launch({ headless: "new" });
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: "networkidle0" });
+
+      const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
+
+      await browser.close();
+
+      res.set({
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename=invoice-${id}.pdf`,
+      });
+
+      res.send(pdfBuffer);
+    });
+  } catch (err) {
+    console.error("Error fetching invoice:", err);
+    res.status(500).send("خطأ في إنشاء الفاتورة PDF");
+  }
 });
 
 export default router;
