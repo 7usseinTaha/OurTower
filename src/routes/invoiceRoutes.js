@@ -72,10 +72,9 @@ router.get("/ShowInvoice/:id/pdf", async (req, res) => {
         }
 
         const browser = await puppeteer.launch({
-          headless: "new",
-          executablePath: puppeteer.executablePath(), // مهم جداً لتحديد مكان المتصفح المحمّل
-          args: ["--no-sandbox", "--disable-setuid-sandbox"], // لتجنب مشاكل الصلاحيات على Render
-        });
+  headless: "new",
+  args: ["--no-sandbox", "--disable-setuid-sandbox"],
+});
         const page = await browser.newPage();
         await page.setContent(html, { waitUntil: "networkidle0" });
 
