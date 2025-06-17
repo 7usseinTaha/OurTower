@@ -9,6 +9,10 @@ const userSchema = new schema({
   password: { type: String, required: true, minlength: 8 },
   role:     { type: String, required: true },
   profileImg: { type: String, default: "" },
+  isActive: { type: Boolean, default: true },
+  editeRole: { type: Boolean, default: false },
+  updateRole: { type: Boolean, default: false },
+  deleteRole: { type: Boolean, default: false },
 
 
 },{ timestamps: true });

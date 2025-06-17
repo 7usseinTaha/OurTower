@@ -2,7 +2,7 @@ import express, { Router } from "express";
 import  JWT from "jsonwebtoken";
 import protectRoute from "../middleware/auth.middleware.js";
 
-import { addUsers,loginUser,getAllUsers,deleteUser,updateUser } from "../controllers/usersController.js";
+import { addUsers,loginUser,getAllUsers,getUserById,deleteUser,updateUser } from "../controllers/usersController.js";
 
 
 const router = express.Router();
@@ -19,7 +19,10 @@ router.post("/login/", loginUser);
 // Router to get All Users
 router.get("/getallusers",protectRoute,  getAllUsers);
 
-// Router to update a user
+// Router to get a user by ID
+router.get("/getuser/:userId", protectRoute, getUserById); 
+
+ // Router to update a user
 router.put("/updateuser/:userId",protectRoute,  updateUser);
 // Router to delete a user
 router.delete("/deleteuser/:userId",protectRoute,  deleteUser);

@@ -137,7 +137,7 @@ if (!isUnique) {
 }
 // 1. توليد QR Code
 
-const qrData = `${process.env.API_URL}/api/invoices/ShowInvoice/${invoiceNumber}/pdf`;
+const qrData = `${process.env.API_URL}/api/invoices/ShowInvoice/${invoiceNumber}`;
 const qrCodeImage = await QRCode.toDataURL(qrData); 
   const newInvoice = new Invoice({
     invoiceNumber,

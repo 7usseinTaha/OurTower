@@ -50,6 +50,10 @@ const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8
       password,
       role,
       profileImg,
+      isActive: true,
+      editeRole: false, 
+      updateRole: false,
+      deleteRole: false,
     });
 
     await newUser.save();
@@ -195,5 +199,38 @@ export const deleteUser = async (req, res) => {
   } catch (error) {
     console.error("Error deleting user:", error);
     res.status(500).json({ message: "حدث خطأ أثناء حذف المستخدم" });
+  }
+};
+
+// Function to get user profile
+export const getUserById = async (req, res) => {
+  try {
+    const userId = req.user._id; // Assuming user ID is stored in req.user
+
+    // Validate userId
+    if (!userId) {
+      return res.status(400).json({ message: "معرف المستخدم مطلوب" });
+    }
+
+    // Fetch user profile
+    const user = await User.findById(userId, '-password'); // Exclude password field
+    if (!user) {
+      return res.status(404).json({ message: "المستخدم غير موجود" });
+    }
+
+    res.status(200).json({
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      profileImg: user.profileImg,
+      isActive: user.isActive,
+      editeRole: user.editeRole,  
+      updateRole: user.updateRole,
+      deleteRole: user.deleteRole,
+    });
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    res.status(500).json({ message: "حدث خطأ أثناء جلب ملف تعريف المستخدم" });
   }
 };
