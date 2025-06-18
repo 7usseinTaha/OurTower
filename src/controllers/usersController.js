@@ -1,5 +1,5 @@
+import JWT from "jsonwebtoken";
 import User from '../models/User.js';
-import  JWT from "jsonwebtoken";
 
 const generateToken = (userid) => {
   return JWT.sign({ userid }, process.env.JWT_SECRET, { expiresIn: "15d" });
@@ -120,7 +120,6 @@ export const loginUser = async (req, res) => {
   } catch (error) {
     console.error("Error logging in:", error);
     return res.status(500).json({ message: "حدث خطأ أثناء تسجيل الدخول" });
-    console.log("Error logging in:",req.body);
   }
 };
 
@@ -205,7 +204,7 @@ export const deleteUser = async (req, res) => {
 // Function to get user profile
 export const getUserById = async (req, res) => {
   try {
-    const userId = req.user._id; // Assuming user ID is stored in req.user
+    const userId = req.params.id;
 
     // Validate userId
     if (!userId) {
