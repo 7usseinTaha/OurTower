@@ -5,12 +5,12 @@ import protectRoute from "../middleware/auth.middleware.js";
 import {
   addUsers,
   deleteUser,
+  forgotPassword,
   getAllUsers,
   getUserById,
   loginUser,
-  updateUser,
-  forgotPassword,
   resetPassword,
+  updateUser,
 } from "../controllers/usersController.js";
 
 const router = express.Router();
@@ -19,7 +19,7 @@ const generateToken = (userid) => {
 };
 
 // Router to add users
-router.post("/addusers/", addUsers);
+router.post("/addusers/",protectRoute, addUsers);
 
 // Router to login users
 router.post("/login/", loginUser);
