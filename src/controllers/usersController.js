@@ -1,6 +1,7 @@
 import JWT from "jsonwebtoken";
 import User from '../models/User.js';
-
+import nodemailer from 'nodemailer';
+import "dotenv/config";
 const generateToken = (userid) => {
   return JWT.sign({ userid }, process.env.JWT_SECRET, { expiresIn: "15d" });
 };
@@ -236,4 +237,69 @@ export const getUserById = async (req, res) => {
     console.error("Error fetching user profile:", error);
     res.status(500).json({ message: "حدث خطأ أثناء جلب ملف تعريف المستخدم" });
   }
+};
+
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'المستخدم غير موجود' });
+
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: '1h',
+    });
+
+    user.resetToken = token;
+    user.resetTokenExpiration = Date.now() + 3600000;
+    await user.save();
+
+    // إعداد البريد
+    const transporter = nodemailer.createTransport({
+      service: 'Gmail',
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const resetLink = `${process.env.API_URL}api/auth/reset-password/${token}`;
+
+    await transporter.sendMail({
+      to: email,
+      from: process.env.EMAIL,
+      subject: 'إعادة تعيين كلمة المرور',
+      html: `<p>لقد طلبت إعادة تعيين كلمة المرور</p>
+             <p>انقر على الرابط التالي لتعيين كلمة مرور جديدة:</p>
+             <a href="${resetLink}">${resetLink}</a>`,
+    });
+
+    res.json({ message: 'تم إرسال الرابط إلى بريدك الإلكتروني' });
+  } catch (err) {
+    res.status(500).json({ message: 'فشل إرسال الرابط', error: err.message });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  // const { token } = req.params;
+  // const { newPassword } = req.body;
+  // try {
+  //   const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  //   const user = await User.findOne({
+  //     _id: decoded.userId,
+  //     resetToken: token,
+  //     resetTokenExpiration: { $gt: Date.now() },
+  //   });
+
+  //   if (!user) return res.status(400).json({ message: 'رمز غير صالح أو منتهي' });
+
+  //   user.password = newPassword;
+  //   user.resetToken = undefined;
+  //   user.resetTokenExpiration = undefined;
+  //   await user.save();
+
+  //   res.json({ message: 'تم تغيير كلمة المرور بنجاح' });
+  // } catch (err) {
+  //   res.status(500).json({ message: 'فشل التحديث', error: err.message });
+  // }
+    res.render("resetPassword.ejs");
 };
