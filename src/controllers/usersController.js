@@ -204,7 +204,7 @@ export const deleteUser = async (req, res) => {
 // Function to get user profile
 export const getUserById = async (req, res) => {
   try {
-    const userId = req.params.id;
+    const userId = req.params.userId;
 
     // Validate userId
     if (!userId) {
