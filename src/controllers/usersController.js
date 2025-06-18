@@ -1,9 +1,9 @@
-import JWT from "jsonwebtoken";
-import User from '../models/User.js';
-import nodemailer from 'nodemailer';
 import "dotenv/config";
+import JWT from "jsonwebtoken";
+import nodemailer from 'nodemailer';
+import User from '../models/User.js';
 const generateToken = (userid) => {
-  return JWT.sign({ userid }, process.env.JWT_SECRET, { expiresIn: "15d" });
+  return JWT.sign({ userid }, process.env.JWT_SECRET, { expiresIn: "1h" });
 };
 
 // Function to add users
@@ -229,8 +229,8 @@ export const getUserById = async (req, res) => {
       role: user.role,
       profileImg: user.profileImg,
       isActive: user.isActive,
-      editeRole: user.editeRole,  
-      updateRole: user.updateRole,
+      addRole: user.addRole,
+      editRole: user.editRole,
       deleteRole: user.deleteRole,
     });
   } catch (error) {
@@ -245,9 +245,7 @@ export const forgotPassword = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: 'المستخدم غير موجود' });
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: '1h',
-    });
+    const token = generateToken(user._id);
 
     user.resetToken = token;
     user.resetTokenExpiration = Date.now() + 3600000;
