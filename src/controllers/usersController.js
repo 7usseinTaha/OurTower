@@ -138,7 +138,7 @@ export const getAllUsers = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { username, email, role, profileImg } = req.body;
+    const { username, email, role, profileImg,isActive,addRole,editRole,deleteRole } = req.body;
 
     // Validate userId
     if (!userId) {
@@ -156,6 +156,10 @@ export const updateUser = async (req, res) => {
     user.email = email || user.email;
     user.role = role || user.role;
     user.profileImg = profileImg || user.profileImg;
+    user.isActive = isActive !== undefined ? isActive : user.isActive;
+    user.addRole = addRole !== undefined ? addRole : user.addRole;
+    user.editRole = editRole !== undefined ? editRole : user.editRole;
+    user.deleteRole = deleteRole !== undefined ? deleteRole : user.deleteRole;
 
     await user.save();
 

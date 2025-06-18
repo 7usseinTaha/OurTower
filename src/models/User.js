@@ -10,8 +10,8 @@ const userSchema = new schema({
   role:     { type: String, required: true },
   profileImg: { type: String, default: "" },
   isActive: { type: Boolean, default: true },
-  editeRole: { type: Boolean, default: false },
-  updateRole: { type: Boolean, default: false },
+  addRole: { type: Boolean, default: false },
+  editRole: { type: Boolean, default: false },
   deleteRole: { type: Boolean, default: false },
 
 
