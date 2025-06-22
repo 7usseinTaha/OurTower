@@ -1,13 +1,13 @@
 import "dotenv/config";
 import JWT from "jsonwebtoken";
-import nodemailer from 'nodemailer';
-import User from '../models/User.js';
+import nodemailer from "nodemailer";
+import User from "../models/User.js";
 const generateToken = (userid) => {
   return JWT.sign({ userid }, process.env.JWT_SECRET, { expiresIn: "1h" });
 };
 
 // Function to add users
-export const addUsers =   async (req, res) => {
+export const addUsers = async (req, res) => {
   try {
     // Extract user details from request body
     const { username, email, password, role } = req.body;
@@ -24,10 +24,15 @@ export const addUsers =   async (req, res) => {
     }
 
     // check if password is strong
-const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    const passwordRegex =
+      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(password)) {
-      return res.status(400).json({ message: "# يرجى إدخال كلمة مرور قوية تحتوي على 8 أحرف أو أكثر، تشمل حرفًا واحدًا على الأقل، رقمًا واحدًا، ورمزًا خاصًا مثل @ , ! أو #."
- });
+      return res
+        .status(400)
+        .json({
+          message:
+            "# يرجى إدخال كلمة مرور قوية تحتوي على 8 أحرف أو أكثر، تشمل حرفًا واحدًا على الأقل، رقمًا واحدًا، ورمزًا خاصًا مثل @ , ! أو #.",
+        });
     }
 
     // Check if user already exists
@@ -38,7 +43,7 @@ const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8
 
     // check if email already exists
     const existingEmail = await User.findOne({ email });
-    if (existingEmail) {           
+    if (existingEmail) {
       return res.status(400).json({ message: "البريد الإلكتروني موجود مسبقا" });
     }
 
@@ -52,7 +57,7 @@ const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8
       role,
       profileImg,
       isActive: true,
-      editeRole: false, 
+      editeRole: false,
       updateRole: false,
       deleteRole: false,
     });
@@ -72,9 +77,12 @@ const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8
         email: newUser.email,
         role: newUser.role,
         profileImg: newUser.profileImg,
+        isActive: newUser.isActive,
+        addRole: newUser.addRole,
+        editRole: newUser.editRole,
+        deleteRole: newUser.deleteRole,
       },
     });
-
   } catch (error) {
     console.error("Error adding user:", error);
     return res.status(500).json({ message: "حدث خطأ أثناء إضافة المستخدم" });
@@ -88,20 +96,24 @@ export const loginUser = async (req, res) => {
 
     // Validate input
     if (!email || !password) {
-      console.log("All feilded is reqused")
+      console.log("All feilded is reqused");
       return res.status(400).json({ message: "جميع الحقول مطلوبة" });
     }
 
     // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: "اسم المستخدم او كلمة المرور غير صحيحة"  });
+      return res
+        .status(400)
+        .json({ message: "اسم المستخدم او كلمة المرور غير صحيحة" });
     }
 
     // Check password
     const isPasswordCorrect = await user.comparePassword(password);
     if (!isPasswordCorrect) {
-      return res.status(400).json({ message: "اسم المستخدم او كلمة المرور غير صحيحة" });
+      return res
+        .status(400)
+        .json({ message: "اسم المستخدم او كلمة المرور غير صحيحة" });
     }
 
     const token = generateToken(user._id);
@@ -116,6 +128,10 @@ export const loginUser = async (req, res) => {
         email: user.email,
         role: user.role,
         profileImg: user.profileImg,
+        isActive: user.isActive,
+        addRole: user.addRole,
+        editRole: user.editRole,
+        deleteRole: user.deleteRole,
       },
     });
   } catch (error) {
@@ -127,7 +143,7 @@ export const loginUser = async (req, res) => {
 // Function to get all users
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({}, '-password'); // Exclude password field
+    const users = await User.find({}, "-password"); // Exclude password field
     res.status(200).json(users);
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -139,7 +155,16 @@ export const getAllUsers = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { username, email, role, profileImg,isActive,addRole,editRole,deleteRole } = req.body;
+    const {
+      username,
+      email,
+      role,
+      profileImg,
+      isActive,
+      addRole,
+      editRole,
+      deleteRole,
+    } = req.body;
 
     // Validate userId
     if (!userId) {
@@ -172,6 +197,10 @@ export const updateUser = async (req, res) => {
         email: user.email,
         role: user.role,
         profileImg: user.profileImg,
+        isActive: user.isActive,
+        addRole: user.addRole,
+        editRole: user.editRole,
+        deleteRole: user.deleteRole,
       },
     });
   } catch (error) {
@@ -181,7 +210,7 @@ export const updateUser = async (req, res) => {
 };
 
 // Function to delete a user
-export const deleteUser = async (req, res) => { 
+export const deleteUser = async (req, res) => {
   try {
     const { userId } = req.params;
 
@@ -217,7 +246,7 @@ export const getUserById = async (req, res) => {
     }
 
     // Fetch user profile
-    const user = await User.findById(userId, '-password'); // Exclude password field
+    const user = await User.findById(userId, "-password"); // Exclude password field
     if (!user) {
       return res.status(404).json({ message: "المستخدم غير موجود" });
     }
@@ -243,7 +272,7 @@ export const forgotPassword = async (req, res) => {
   const { email } = req.body;
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: 'المستخدم غير موجود' });
+    if (!user) return res.status(404).json({ message: "المستخدم غير موجود" });
 
     const token = generateToken(user._id);
 
@@ -253,7 +282,7 @@ export const forgotPassword = async (req, res) => {
 
     // إعداد البريد
     const transporter = nodemailer.createTransport({
-      service: 'Gmail',
+      service: "Gmail",
       auth: {
         user: process.env.EMAIL,
         pass: process.env.EMAIL_PASS,
@@ -265,39 +294,40 @@ export const forgotPassword = async (req, res) => {
     await transporter.sendMail({
       to: email,
       from: process.env.EMAIL,
-      subject: 'إعادة تعيين كلمة المرور',
+      subject: "إعادة تعيين كلمة المرور",
       html: `<p>لقد طلبت إعادة تعيين كلمة المرور</p>
              <p>انقر على الرابط التالي لتعيين كلمة مرور جديدة:</p>
              <a href="${resetLink}">${resetLink}</a>`,
     });
 
-    res.json({ message: 'تم إرسال الرابط إلى بريدك الإلكتروني' });
+    res.json({ message: "تم إرسال الرابط إلى بريدك الإلكتروني" });
   } catch (err) {
-    res.status(500).json({ message: 'فشل إرسال الرابط', error: err.message });
+    res.status(500).json({ message: "فشل إرسال الرابط", error: err.message });
   }
 };
 
 export const resetPassword = async (req, res) => {
-  // const { token } = req.params;
-  // const { newPassword } = req.body;
-  // try {
-  //   const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  //   const user = await User.findOne({
-  //     _id: decoded.userId,
-  //     resetToken: token,
-  //     resetTokenExpiration: { $gt: Date.now() },
-  //   });
+  const { token } = req.params;
+  const { newPassword } = req.body;
+  try {
+    const decoded = JWT.verify(token, process.env.JWT_SECRET);
+    const user = await User.findOne({
+      _id: decoded.userId,
+      resetToken: token,
+      resetTokenExpiration: { $gt: Date.now() },
+    });
 
-  //   if (!user) return res.status(400).json({ message: 'رمز غير صالح أو منتهي' });
+    if (!user)
+      return res.status(400).json({ message: "رمز غير صالح أو منتهي" });
 
-  //   user.password = newPassword;
-  //   user.resetToken = undefined;
-  //   user.resetTokenExpiration = undefined;
-  //   await user.save();
+    user.password = newPassword;
+    user.resetToken = undefined;
+    user.resetTokenExpiration = undefined;
+    await user.save();
 
-  //   res.json({ message: 'تم تغيير كلمة المرور بنجاح' });
-  // } catch (err) {
-  //   res.status(500).json({ message: 'فشل التحديث', error: err.message });
-  // }
-    res.render("resetPassword.ejs");
+    res.json({ message: "تم تغيير كلمة المرور بنجاح" });
+  } catch (err) {
+    res.status(500).json({ message: "فشل التحديث", error: err.message });
+  }
+  // res.render("resetPassword.ejs");
 };

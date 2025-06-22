@@ -39,7 +39,7 @@ router.delete("/deleteuser/:userId", protectRoute, deleteUser);
 router.post("/forgotpassword/", forgotPassword);
 
 //Router to reset password
-router.post("/reset-password/:token", resetPassword);
+router.put("/reset-password/:token", resetPassword);
 
 
 
