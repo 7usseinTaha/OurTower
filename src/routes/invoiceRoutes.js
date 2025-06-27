@@ -39,10 +39,7 @@ router.get("/ShowInvoice/:id", async (req, res) => {
     }
 
     const html = await new Promise((resolve, reject) => {
-      res.render("showInvoices.ejs", { showInvoices: invoice }, (err, html) => {
-        if (err) reject(err);
-        else resolve(html);
-      });
+      res.render("showInvoices.ejs", { showInvoices: invoice });
     });
   } catch (err) {
     console.error("Error fetching invoice:", err);

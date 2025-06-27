@@ -11,6 +11,8 @@ import {
   loginUser,
   resetPassword,
   updateUser,
+  updatePassword,
+  verifyEmail
 } from "../controllers/usersController.js";
 
 const router = express.Router();
@@ -19,13 +21,13 @@ const generateToken = (userid) => {
 };
 
 // Router to add users
-router.post("/addusers/",protectRoute, addUsers);
+router.post("/addusers/", protectRoute, addUsers);
 
 // Router to login users
 router.post("/login/", loginUser);
 
 // Router to get All Users
-router.get("/allusers", protectRoute, getAllUsers);
+router.get("/allusers", protectRoute,  getAllUsers);
 
 // Router to get a user by ID
 router.get("/user/:userId", protectRoute, getUserById);
@@ -36,11 +38,14 @@ router.put("/updateuser/:userId", protectRoute, updateUser);
 router.delete("/deleteuser/:userId", protectRoute, deleteUser);
 
 // Router to forgot password
-router.post("/forgotpassword/", forgotPassword);
+router.post("/forgot-password/", forgotPassword);
 
 //Router to reset password
-router.put("/reset-password/:token", resetPassword);
+router.put("/reset-password/:userId/:token", resetPassword);
 
+router.put("/update-password/:userId",protectRoute, updatePassword);
+
+router.post("/verify-email/:userId/:token", verifyEmail);
 
 
 export default router;

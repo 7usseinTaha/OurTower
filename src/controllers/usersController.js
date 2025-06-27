@@ -1,9 +1,11 @@
 import "dotenv/config";
 import JWT from "jsonwebtoken";
+import bcrypt from "bcrypt";
 import nodemailer from "nodemailer";
 import User from "../models/User.js";
-const generateToken = (userid) => {
-  return JWT.sign({ userid }, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+const generateToken = (userId) => {
+  return JWT.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "1h" });
 };
 
 // Function to add users
@@ -27,12 +29,10 @@ export const addUsers = async (req, res) => {
     const passwordRegex =
       /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(password)) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "# يرجى إدخال كلمة مرور قوية تحتوي على 8 أحرف أو أكثر، تشمل حرفًا واحدًا على الأقل، رقمًا واحدًا، ورمزًا خاصًا مثل @ , ! أو #.",
-        });
+      return res.status(400).json({
+        message:
+          "# يرجى إدخال كلمة مرور قوية تحتوي على 8 أحرف أو أكثر، تشمل حرفًا واحدًا على الأقل، رقمًا واحدًا، ورمزًا خاصًا مثل @ , ! أو #.",
+      });
     }
 
     // Check if user already exists
@@ -60,17 +60,64 @@ export const addUsers = async (req, res) => {
       editeRole: false,
       updateRole: false,
       deleteRole: false,
+      isVerified: false,
     });
-
-    await newUser.save();
 
     // Generate JWT token
     const token = generateToken(newUser._id);
+    const transporter = nodemailer.createTransport({
+      service: "Gmail",
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const verificationToken = JWT.sign(
+      { userId: newUser._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    const verificationLink = `${process.env.API_URL}/api/auth/verify-email/${newUser._id}/${verificationToken}`;
+
+     await transporter.sendMail({
+      to: newUser.email,
+      from: process.env.EMAIL,
+      subject: "تفعيل البريد الإلكتروني",
+      html: `
+        <div style="font-family: 'Arial', sans-serif; background-color: #f4f4f4; padding: 30px;">
+          <center>
+            <div style="background-color: #ffffff; padding: 40px; border-radius: 10px; max-width: 600px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+              <h2 style="color: #333;">مرحبًا ${newUser.username}</h2>
+              <p style="font-size: 16px; color: #555;">
+          يرجى الضغط على الرابط التالي لتفعيل حسابك:
+              </p>
+            
+               <a href="${verificationLink}" target="_blank"
+        style="padding: 10px 20px; background: #28a745; color: white; text-decoration: none; border-radius: 5px;">
+        تفعيل البريد
+      </a>
+              <p style="font-size: 14px; color: #999;">
+                هذا الرابط صالح لمدة <strong>ساعة واحدة فقط</strong>.
+              </p>
+              <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+              <p style="font-size: 12px; color: #aaa;">
+                إذا لم تطلب انشاء مستخدم يمكنك تجاهل هذا البريد.
+              </p>
+            </div>
+          </center>
+        </div>
+      `,
+    });
+
+    await newUser.save();
 
     // Send response
     res.status(201).json({
       message: "تم إضافة المستخدم بنجاح",
       token,
+      
       user: {
         id: newUser._id,
         username: newUser.username,
@@ -81,11 +128,38 @@ export const addUsers = async (req, res) => {
         addRole: newUser.addRole,
         editRole: newUser.editRole,
         deleteRole: newUser.deleteRole,
+        isVerified: newUser.isActive,
+        createdAt: newUser.createdAt,
+
       },
     });
   } catch (error) {
     console.error("Error adding user:", error);
     return res.status(500).json({ message: "حدث خطأ أثناء إضافة المستخدم" });
+  }
+};
+
+export const verifyEmail = async (req, res) => {
+  const { userId, token } = req.params;
+  try {
+    const decoded = JWT.verify(token, process.env.JWT_SECRET);
+    if (decoded.userId !== userId) {
+      return res.status(400).json({ message: "طلب غير صالح" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "المستخدم غير موجود" });
+
+    if (user.isVerified) {
+      return res.status(400).json({ message: "الحساب مفعل مسبقاً" });
+    }
+
+    user.isVerified = true;
+    await user.save();
+
+    res.status(200).json({ message: "تم تفعيل البريد الإلكتروني بنجاح" });
+  } catch (error) {
+    res.status(500).json({ message: "فشل التفعيل", error: error.message });
   }
 };
 
@@ -116,6 +190,10 @@ export const loginUser = async (req, res) => {
         .json({ message: "اسم المستخدم او كلمة المرور غير صحيحة" });
     }
 
+        if (!user.isVerified) {
+      return res.status(403).json({ message: " يرجى تفعيل البريد الإلكتروني أولاً  " });
+    }
+
     const token = generateToken(user._id);
 
     // Send response
@@ -132,6 +210,7 @@ export const loginUser = async (req, res) => {
         addRole: user.addRole,
         editRole: user.editRole,
         deleteRole: user.deleteRole,
+        createdAt: user.createdAt,
       },
     });
   } catch (error) {
@@ -289,15 +368,41 @@ export const forgotPassword = async (req, res) => {
       },
     });
 
-    const resetLink = `${process.env.API_URL}api/auth/reset-password/${token}`;
+    const resetLink = `${process.env.API_URL}/api/auth/reset-password/${user._id}/${token}`;
 
     await transporter.sendMail({
       to: email,
       from: process.env.EMAIL,
       subject: "إعادة تعيين كلمة المرور",
-      html: `<p>لقد طلبت إعادة تعيين كلمة المرور</p>
-             <p>انقر على الرابط التالي لتعيين كلمة مرور جديدة:</p>
-             <a href="${resetLink}">${resetLink}</a>`,
+      html: `
+  <div style="font-family: 'Arial', sans-serif; background-color: #f4f4f4; padding: 30px;">
+    <center>
+      <div style="background-color: #ffffff; padding: 40px; border-radius: 10px; max-width: 600px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+        <h2 style="color: #333;">مرحبًا ${user.username}</h2>
+        <p style="font-size: 16px; color: #555;">
+          لقد طلبت إعادة تعيين كلمة المرور لحسابك لدينا.
+        </p>
+        <p style="font-size: 16px; color: #555;">
+          اضغط على الزر أدناه لإعادة تعيين كلمة المرور:
+        </p>
+        <a href="${resetLink}" target="_blank"
+          style="display: inline-block; padding: 12px 25px; margin: 20px 0;
+                 background-color: #0E4D28";
+                 color: #fff; text-decoration: none;
+                 font-size: 16px; border-radius: 5px;">
+          إعادة تعيين كلمة المرور
+        </a>
+        <p style="font-size: 14px; color: #999;">
+          هذا الرابط صالح لمدة <strong>ساعة واحدة فقط</strong>.
+        </p>
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+        <p style="font-size: 12px; color: #aaa;">
+          إذا لم تطلب إعادة تعيين كلمة المرور، يمكنك تجاهل هذا البريد.
+        </p>
+      </div>
+    </center>
+  </div>
+`,
     });
 
     res.json({ message: "تم إرسال الرابط إلى بريدك الإلكتروني" });
@@ -306,20 +411,57 @@ export const forgotPassword = async (req, res) => {
   }
 };
 
-export const resetPassword = async (req, res) => {
-  const { token } = req.params;
-  const { newPassword } = req.body;
+export const updatePassword = async (req, res) => {
+  const { userID } = req.params;
+  const token = req.headers.authorization?.replace("Bearer ", "");
+  const { currentPassword, newPassword } = req.body;
+
   try {
     const decoded = JWT.verify(token, process.env.JWT_SECRET);
-    const user = await User.findOne({
-      _id: decoded.userId,
+
+    const user = await User.findById(decoded.userid).select("+password");
+
+    if (!user)
+      return res.status(400).json({ message: "رمز غير صالح أو منتهي" });
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "كلمة المرور الحالية غير صحيحة" });
+    }
+    user.password = newPassword;
+
+    await user.save();
+
+    res.json({ message: "تم تغيير كلمة المرور بنجاح" });
+  } catch (err) {
+    res.status(500).json({ message: "فشل التحديث", error: err.message });
+  }
+  // res.render("resetPassword.ejs");
+};
+
+export const resetPassword = async (req, res) => {
+  const { userId, token } = req.params;
+  const { newPassword } = req.body;
+
+  try {
+    const decoded = JWT.verify(token, process.env.JWT_SECRET);
+
+    // تحقق أن الـ userId الموجود في التوكن يطابق الموجود في الرابط
+    if (decoded.userId !== userId) {
+      return res.status(400).json({ message: "طلب غير صالح أو محاولة تلاعب" });
+    }
+
+    const user = await User.findById({
+      _id: userId,
       resetToken: token,
       resetTokenExpiration: { $gt: Date.now() },
     });
 
-    if (!user)
+    console.log("user", user);
+    if (!user) {
       return res.status(400).json({ message: "رمز غير صالح أو منتهي" });
+    }
 
+    // تحديث كلمة المرور
     user.password = newPassword;
     user.resetToken = undefined;
     user.resetTokenExpiration = undefined;
@@ -329,5 +471,4 @@ export const resetPassword = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: "فشل التحديث", error: err.message });
   }
-  // res.render("resetPassword.ejs");
 };
