@@ -7,19 +7,16 @@ const protectRoute = async (req, res, next) => {
     const token = req.headers.authorization?.replace("Bearer ", "");
     if (!token) {
       console.log("No token provided");
-      return       res.render("notFound.ejs");
-
-      // res
-      //   .status(401)
-      //   .json({ message: "ليس لديك صلاحية : غير مصرح لك بالوصول لهذه الصفحة" });
-
+      return res
+        .status(401)
+        .json({ message: "ليس لديك صلاحية : غير مصرح لك بالوصول لهذه الصفحة" });
     }
 
     // Verify the token
     const decoded = JWT.verify(token, process.env.JWT_SECRET);
 
     // Check if the user exists in the database
-    const user = await User.findById(decoded.userid).select("-password");
+    const user = await User.findById(decoded.userId).select("-password");
 
     // Check if user is found
     if (!user) {
