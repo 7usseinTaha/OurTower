@@ -21,10 +21,10 @@ const generateToken = (userid) => {
 };
 
 // Router to add users
-router.post("/addusers/", protectRoute, addUsers);
+router.post("/addusers", protectRoute, addUsers);
 
 // Router to login users
-router.post("/login/", loginUser);
+router.post("/login", loginUser);
 
 // Router to get All Users
 router.get("/allusers", protectRoute,  getAllUsers);
@@ -45,7 +45,7 @@ router.put("/reset-password/:userId/:token", resetPassword);
 
 router.put("/update-password/:userId",protectRoute, updatePassword);
 
-router.post("/verify-email/:userId/:token", verifyEmail);
+router.get("/verify-email/:userId/:token", verifyEmail);
 
 
 export default router;

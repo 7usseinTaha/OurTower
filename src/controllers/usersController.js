@@ -115,9 +115,7 @@ export const addUsers = async (req, res) => {
 
     // Send response
     res.status(201).json({
-      message: "تم إضافة المستخدم بنجاح",
-      token,
-      
+      message: "تم إضافة المستخدم بنجاح. تم إرسال رابط التفعيل إلى البريد الإلكتروني.",
       user: {
         id: newUser._id,
         username: newUser.username,
@@ -128,9 +126,8 @@ export const addUsers = async (req, res) => {
         addRole: newUser.addRole,
         editRole: newUser.editRole,
         deleteRole: newUser.deleteRole,
-        isVerified: newUser.isActive,
+        isVerified: newUser.isVerified,
         createdAt: newUser.createdAt,
-
       },
     });
   } catch (error) {
@@ -157,9 +154,54 @@ export const verifyEmail = async (req, res) => {
     user.isVerified = true;
     await user.save();
 
-    res.status(200).json({ message: "تم تفعيل البريد الإلكتروني بنجاح" });
-  } catch (error) {
-    res.status(500).json({ message: "فشل التفعيل", error: error.message });
+res.send(`
+  <html lang="ar" dir="rtl">
+    <head>
+      <meta charset="UTF-8" />
+      <title>تفعيل الحساب</title>
+      <style>
+        body {
+          font-family: 'Arial', sans-serif;
+          background-color: #f0f2f5;
+          text-align: center;
+          padding: 50px;
+        }
+        .box {
+          background: white;
+          padding: 40px;
+          border-radius: 10px;
+          display: inline-block;
+          box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+          color: #28a745;
+        }
+        a {
+          display: inline-block;
+          margin-top: 20px;
+          text-decoration: none;
+          color: white;
+          background: #28a745;
+          padding: 10px 20px;
+          border-radius: 5px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="box">
+        <h2>✅ تم تفعيل بريدك الإلكتروني بنجاح</h2>
+        <p>يمكنك الآن تسجيل الدخول إلى حسابك</p>
+        <a href="ourtower://login">فتح التطبيق</a>
+      </div>
+    </body>
+  </html>
+`);  
+} catch (error) {
+    const isExpired = error.name === "TokenExpiredError";
+  return res.status(400).json({
+    message: isExpired ? "انتهت صلاحية رابط التفعيل، يرجى طلب رابط جديد." : "فشل التفعيل",
+    error: error.message,
+  });
   }
 };
 
@@ -419,7 +461,7 @@ export const updatePassword = async (req, res) => {
   try {
     const decoded = JWT.verify(token, process.env.JWT_SECRET);
 
-    const user = await User.findById(decoded.userid).select("+password");
+    const user = await User.findById(decoded.userId).select("+password");
 
     if (!user)
       return res.status(400).json({ message: "رمز غير صالح أو منتهي" });

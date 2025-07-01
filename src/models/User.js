@@ -14,10 +14,7 @@ const userSchema = new schema(
     addRole: { type: Boolean, default: false },
     editRole: { type: Boolean, default: false },
     deleteRole: { type: Boolean, default: false },
-    isVerified: {
-      type: Boolean,
-      default: false,
-    },
+    isVerified: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
