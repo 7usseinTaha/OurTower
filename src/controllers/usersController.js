@@ -56,66 +56,18 @@ export const addUsers = async (req, res) => {
       password,
       role,
       profileImg,
-      isActive: true,
+      isActive: false,
       editeRole: false,
       updateRole: false,
       deleteRole: false,
       isVerified: false,
     });
 
-    // Generate JWT token
-    const token = generateToken(newUser._id);
-    const transporter = nodemailer.createTransport({
-      service: "Gmail",
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const verificationToken = JWT.sign(
-      { userId: newUser._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
-
-    const verificationLink = `${process.env.API_URL}/api/auth/verify-email/${newUser._id}/${verificationToken}`;
-
-     await transporter.sendMail({
-      to: newUser.email,
-      from: process.env.EMAIL,
-      subject: "تفعيل البريد الإلكتروني",
-      html: `
-        <div style="font-family: 'Arial', sans-serif; background-color: #f4f4f4; padding: 30px;">
-          <center>
-            <div style="background-color: #ffffff; padding: 40px; border-radius: 10px; max-width: 600px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-              <h2 style="color: #333;">مرحبًا ${newUser.username}</h2>
-              <p style="font-size: 16px; color: #555;">
-          يرجى الضغط على الرابط التالي لتفعيل حسابك:
-              </p>
-            
-               <a href="${verificationLink}" target="_blank"
-        style="padding: 10px 20px; background: #28a745; color: white; text-decoration: none; border-radius: 5px;">
-        تفعيل البريد
-      </a>
-              <p style="font-size: 14px; color: #999;">
-                هذا الرابط صالح لمدة <strong>ساعة واحدة فقط</strong>.
-              </p>
-              <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
-              <p style="font-size: 12px; color: #aaa;">
-                إذا لم تطلب انشاء مستخدم يمكنك تجاهل هذا البريد.
-              </p>
-            </div>
-          </center>
-        </div>
-      `,
-    });
-
     await newUser.save();
-
     // Send response
     res.status(201).json({
-      message: "تم إضافة المستخدم بنجاح. تم إرسال رابط التفعيل إلى البريد الإلكتروني.",
+      message:
+        "تم إضافة المستخدم بنجاح.",
       user: {
         id: newUser._id,
         username: newUser.username,
@@ -136,72 +88,290 @@ export const addUsers = async (req, res) => {
   }
 };
 
+export const sendLinkInEmail = async (req, res) => {
+  try {
+    // Extract user details from request body
+    const { userID, email } = req.body;
+
+    const user = await User.findById(userID, "-password"); // Exclude password field
+    if (!user) {
+      return res.status(404).json({ message: "المستخدم غير موجود" });
+    }
+    // Generate JWT token
+    const token = generateToken(userID);
+    const transporter = nodemailer.createTransport({
+      service: "Gmail",
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const verificationToken = JWT.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    const verificationLink = `${process.env.API_URL}/api/auth/verify-email/${user._id}/${verificationToken}`;
+
+    await transporter.sendMail({
+      to: email,
+      from: process.env.EMAIL,
+      subject: "تفعيل حساب البريد الإلكتروني",
+      html: `
+        <div style="font-family: 'Arial', sans-serif; background-color: #f4f4f4; padding: 30px;">
+          <center>
+            <div style="background-color: #ffffff; padding: 40px; border-radius: 10px; max-width: 600px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+              <h2 style="color: #333;">مرحبًا ${user.username}</h2>
+              <p style="font-size: 16px; color: #555;">
+          يرجى الضغط على الرابط التالي لتفعيل حسابك:
+              </p>
+            
+               <a href="${verificationLink}" target="_blank"
+        style="padding: 10px 20px; background: #28a745; color: white; text-decoration: none; border-radius: 5px;">        تفعيل الحساب
+      </a>
+              <p style="font-size: 14px; color: #999;">
+                هذا الرابط صالح لمدة <strong>ساعة واحدة فقط</strong>.
+              </p>
+              <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+              <p style="font-size: 12px; color: #aaa;">
+                إذا لم تطلب انشاء مستخدم يمكنك تجاهل هذا البريد.
+              </p>
+            </div>
+          </center>
+        </div>
+      `,
+    });
+
+    // Send response
+       res.json({ message: "تم إرسال الرابط إلى بريدك الإلكتروني" });
+
+  } catch (error) {
+    console.error("Error adding user:", error);
+    return res.status(500).json({ message: "حدث خطأ أثناء إضافة المستخدم" });
+  }
+};
 export const verifyEmail = async (req, res) => {
   const { userId, token } = req.params;
   try {
     const decoded = JWT.verify(token, process.env.JWT_SECRET);
     if (decoded.userId !== userId) {
-      return res.status(400).json({ message: "طلب غير صالح" });
+      return  res.send(`
+        <html lang="ar" dir="rtl">
+          <head>
+            <meta charset="UTF-8" />
+            <title>تفعيل الحساب</title>
+            <style>
+              body {
+                font-family: 'Arial', sans-serif;
+                background-color: #f0f2f5;
+                text-align: center;
+                padding: 50px;
+              }
+              .box {
+                background: white;
+                padding: 40px;
+                border-radius: 10px;
+                display: inline-block;
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+              }
+              h2 {
+                color: red;
+              }
+              a {
+                display: inline-block;
+                margin-top: 20px;
+                text-decoration: none;
+                color: white;
+                background: #28a745;
+                padding: 10px 20px;
+                border-radius: 5px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="box">
+              <h2>  طلبك غير صالح </h2>
+            </div>
+          </body>
+        </html>
+      `);;
     }
 
     const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "المستخدم غير موجود" });
+    if (!user) return  res.send(`
+        <html lang="ar" dir="rtl">
+          <head>
+            <meta charset="UTF-8" />
+            <title>تفعيل الحساب</title>
+            <style>
+              body {
+                font-family: 'Arial', sans-serif;
+                background-color: #f0f2f5;
+                text-align: center;
+                padding: 50px;
+              }
+              .box {
+                background: white;
+                padding: 40px;
+                border-radius: 10px;
+                display: inline-block;
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+              }
+              h2 {
+                color: #28a745;
+              }
+              a {
+                display: inline-block;
+                margin-top: 20px;
+                text-decoration: none;
+                color: white;
+                background: #28a745;
+                padding: 10px 20px;
+                border-radius: 5px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="box">
+              <h2>   المستخدم غير موجود</h2>
+            </div>
+          </body>
+        </html>
+      `);
 
     if (user.isVerified) {
-      return res.status(400).json({ message: "الحساب مفعل مسبقاً" });
+      return  res.send(`
+        <html lang="ar" dir="rtl">
+          <head>
+            <meta charset="UTF-8" />
+            <title>تفعيل الحساب</title>
+            <style>
+              body {
+                font-family: 'Arial', sans-serif;
+                background-color: #f0f2f5;
+                text-align: center;
+                padding: 50px;
+              }
+              .box {
+                background: white;
+                padding: 40px;
+                border-radius: 10px;
+                display: inline-block;
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+              }
+              h2 {
+                color: #28a745;
+              }
+              a {
+                display: inline-block;
+                margin-top: 20px;
+                text-decoration: none;
+                color: white;
+                background: #28a745;
+                padding: 10px 20px;
+                border-radius: 5px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="box">
+              <h2> الحساب مفعل مسبقاً</h2>
+              <p>يمكنك الآن تسجيل الدخول إلى حسابك</p>
+              <a href="ourtower://login">فتح التطبيق</a>
+            </div>
+          </body>
+        </html>
+      `);
     }
 
     user.isVerified = true;
     await user.save();
-
-res.send(`
-  <html lang="ar" dir="rtl">
-    <head>
-      <meta charset="UTF-8" />
-      <title>تفعيل الحساب</title>
-      <style>
-        body {
-          font-family: 'Arial', sans-serif;
-          background-color: #f0f2f5;
-          text-align: center;
-          padding: 50px;
-        }
-        .box {
-          background: white;
-          padding: 40px;
-          border-radius: 10px;
-          display: inline-block;
-          box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h2 {
-          color: #28a745;
-        }
-        a {
-          display: inline-block;
-          margin-top: 20px;
-          text-decoration: none;
-          color: white;
-          background: #28a745;
-          padding: 10px 20px;
-          border-radius: 5px;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="box">
-        <h2>✅ تم تفعيل بريدك الإلكتروني بنجاح</h2>
-        <p>يمكنك الآن تسجيل الدخول إلى حسابك</p>
-        <a href="ourtower://login">فتح التطبيق</a>
-      </div>
-    </body>
-  </html>
-`);  
-} catch (error) {
+    res.send(`
+        <html lang="ar" dir="rtl">
+          <head>
+            <meta charset="UTF-8" />
+            <title>تفعيل الحساب</title>
+            <style>
+              body {
+                font-family: 'Arial', sans-serif;
+                background-color: #f0f2f5;
+                text-align: center;
+                padding: 50px;
+              }
+              .box {
+                background: white;
+                padding: 40px;
+                border-radius: 10px;
+                display: inline-block;
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+              }
+              h2 {
+                color: #28a745;
+              }
+              a {
+                display: inline-block;
+                margin-top: 20px;
+                text-decoration: none;
+                color: white;
+                background: #28a745;
+                padding: 10px 20px;
+                border-radius: 5px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="box">
+              <h2>✅ تم تفعيل بريدك الإلكتروني بنجاح</h2>
+              <p>يمكنك الآن تسجيل الدخول إلى حسابك</p>
+              <a href="ourtower://login">فتح التطبيق</a>
+            </div>
+          </body>
+        </html>
+      `);
+  } catch (error) {
     const isExpired = error.name === "TokenExpiredError";
-  return res.status(400).json({
-    message: isExpired ? "انتهت صلاحية رابط التفعيل، يرجى طلب رابط جديد." : "فشل التفعيل",
-    error: error.message,
-  });
+    return  res.send(`
+        <html lang="ar" dir="rtl">
+          <head>
+            <meta charset="UTF-8" />
+            <title>تفعيل الحساب</title>
+            <style>
+              body {
+                font-family: 'Arial', sans-serif;
+                background-color: #f0f2f5;
+                text-align: center;
+                padding: 50px;
+              }
+              .box {
+                background: white;
+                padding: 40px;
+                border-radius: 10px;
+                display: inline-block;
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+              }
+              h2 {
+                color: red;
+              }
+              a {
+                display: inline-block;
+                margin-top: 20px;
+                text-decoration: none;
+                color: white;
+                background: #28a745;
+                padding: 10px 20px;
+                border-radius: 5px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="box">
+              <h2> انتهت صلاحية رابط التفعيل، يرجى طلب رابط جديد</h2>
+            </div>
+          </body>
+        </html>
+      `);
   }
 };
 
@@ -232,8 +402,10 @@ export const loginUser = async (req, res) => {
         .json({ message: "اسم المستخدم او كلمة المرور غير صحيحة" });
     }
 
-        if (!user.isVerified) {
-      return res.status(403).json({ message: " يرجى تفعيل البريد الإلكتروني أولاً  " });
+    if (!user.isVerified) {
+      return res
+        .status(403)
+        .json({ message: " يرجى تفعيل البريد الإلكتروني أولاً  " });
     }
 
     const token = generateToken(user._id);
@@ -252,6 +424,7 @@ export const loginUser = async (req, res) => {
         addRole: user.addRole,
         editRole: user.editRole,
         deleteRole: user.deleteRole,
+        isVerified:user.isVerified,
         createdAt: user.createdAt,
       },
     });
@@ -382,6 +555,8 @@ export const getUserById = async (req, res) => {
       addRole: user.addRole,
       editRole: user.editRole,
       deleteRole: user.deleteRole,
+      isVerified: user.isVerified,
+
     });
   } catch (error) {
     console.error("Error fetching user profile:", error);

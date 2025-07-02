@@ -12,6 +12,7 @@ import {
   resetPassword,
   updateUser,
   updatePassword,
+  sendLinkInEmail,
   verifyEmail
 } from "../controllers/usersController.js";
 
@@ -43,9 +44,14 @@ router.post("/forgot-password/", forgotPassword);
 //Router to reset password
 router.put("/reset-password/:userId/:token", resetPassword);
 
+//Router to update password
 router.put("/update-password/:userId",protectRoute, updatePassword);
 
+//Router to verify email
 router.get("/verify-email/:userId/:token", verifyEmail);
+
+//Router to send link to email 
+router.post("/send-link",protectRoute, sendLinkInEmail);
 
 
 export default router;
